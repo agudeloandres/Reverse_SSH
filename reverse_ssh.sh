@@ -35,3 +35,41 @@ read COPY_KEY
 if [ ! "${COPY_KEY}" = "n" ]; then
   su $SUDO_USER -c "ssh-copy-id $MIDDLEMAN_USERNAME@$MIDDLEMAN_SERVER"
 fi
+
+echo "#!/bin/sh
+# ------------------------------
+# Added by setup_reverse_tunnel.sh
+# ------------------------------
+# See autossh and google for reverse ssh tunnels to see how this works
+# When this script runs it will allow you to ssh into this machine even if it is behind a firewall or has a NAT'd IP address. 
+# From any ssh capable machine you just type ssh -p $PORT_NUMBER $SUDO_USER@$MIDDLEMAN_SERVER
+# This is the username on your local server who has public key authentication setup at the middleman
+USER_TO_SSH_IN_AS=$MIDDLEMAN_USERNAME
+# This is the username and hostname/IP address for the middleman (internet accessible server)
+MIDDLEMAN_SERVER_AND_USERNAME=$MIDDLEMAN_USERNAME@$MIDDLEMAN_SERVER
+# Port that the middleman will listen on (use this value as the -p argument when sshing)
+PORT_MIDDLEMAN_WILL_LISTEN_ON=$PORT_NUMBER
+# Connection monitoring port, don't need to know this one
+AUTOSSH_PORT=$MONITORING_PORT_NUMBER
+# Ensures that autossh keeps trying to connect
+AUTOSSH_GATETIME=0
+su -c \"autossh -f -N -R *:\${PORT_MIDDLEMAN_WILL_LISTEN_ON}:localhost:22 \${MIDDLEMAN_SERVER_AND_USERNAME} -oLogLevel=error  -oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no\" $SUDO_USER
+" > $SCRIPT_LOCATION
+
+echo "Making script executable"
+chmod +x $SCRIPT_LOCATION
+
+echo "Tunnel will now automatically run whenever a network connection comes up"
+echo "Do you want to start the tunnel now? [y]/n"
+read START_TUNNEL
+
+if [ ! "${START_TUNNEL}" = "n" ]; then
+  $SCRIPT_LOCATION
+fi
+
+echo "You might want to add the following to your .ssh/config (and then copy it to other machines) so that you can set this up easily:
+Host $HOSTNAME.tunnel
+  Port $PORT_NUMBER
+  HostName $MIDDLEMAN_SERVER
+  User $MIDDLEMAN_USERNAME
+"
