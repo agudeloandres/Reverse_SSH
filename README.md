@@ -2,7 +2,7 @@ Reverse SSH Script
 -----------
 Based on Mikey Mckay Script
 
-wget http://github.com/mikeymckay/reverse_ssh_tunnel/raw/master/setup_reverse_tunnel.sh
+wget http://github.com/agudeloandres/Reverse_SSH/raw/master/reverse_ssh.sh
 
 chmod +x ./setup_reverse_tunnel.sh
 sudo ./setup_reverse_tunnel.sh
